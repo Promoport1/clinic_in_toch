@@ -470,7 +470,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 def main():
-    TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '8525428965:AAEzQeNB_VaEhjYFtWLuo-zKvwIz9elIu90')
+    TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
     application = Application.builder().token(TOKEN).build()
 
     # Обработчики для каждого типа услуг
