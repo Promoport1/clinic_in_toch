@@ -1,18 +1,27 @@
 import asyncio
 import logging
 import os
-from flask import Flask
 import threading
-import requests
-import time
+from flask import Flask
 
 app = Flask(__name__)
 
-# Импортируем бота отдельно чтобы избежать циклических импортов
-def run_bot():
-    """Запускает бота в отдельном процессе"""
-    import main
-    asyncio.run(main.main_async())
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def run_async_code():
+    """Запускает асинхронный код в отдельном потоке с собственным event loop"""
+    try:
+        # Создаем новый event loop для этого потока
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        # Импортируем и запускаем бота
+        from main import main_async
+        loop.run_until_complete(main_async())
+    except Exception as e:
+        logger.error(f"Ошибка в боте: {e}")
 
 @app.route('/')
 def home():
@@ -22,14 +31,20 @@ def home():
 def health():
     return "🟢 OK"
 
-def start_bot():
-    """Запускает бота в отдельном потоке"""
-    bot_thread = threading.Thread(target=run_bot, daemon=True)
-    bot_thread.start()
-    logging.info("Бот запущен в отдельном потоке")
+@app.route('/test')
+def test():
+    return "Веб-сервер работает нормально"
 
 # Запускаем бота при старте приложения
 if __name__ == '__main__':
-    start_bot()
+    logger.info("Запускаем бота в отдельном потоке...")
+    
+    # Запускаем бота в отдельном потоке
+    bot_thread = threading.Thread(target=run_async_code, daemon=True)
+    bot_thread.start()
+    logger.info("Бот запущен в фоновом режиме")
+    
+    # Запускаем веб-сервер
     port = int(os.environ.get('PORT', 5000))
+    logger.info(f"Запускаем веб-сервер на порту {port}")
     app.run(host='0.0.0.0', port=port, debug=False)
