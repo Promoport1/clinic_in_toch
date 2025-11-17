@@ -1,5 +1,6 @@
 import logging
 import os
+import asyncio
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Application, CommandHandler, MessageHandler, ConversationHandler, filters, ContextTypes
 from datetime import datetime
@@ -469,7 +470,8 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text('Диалог прерван. Для начала отправьте /start', reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
 
-def main():
+async def main_async():
+    """Асинхронная версия основной функции"""
     TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
     application = Application.builder().token(TOKEN).build()
 
@@ -538,7 +540,11 @@ def main():
     application.add_handler(audit_conv)
     application.add_handler(main_conv)
     
-    application.run_polling()
+    await application.run_polling()
+
+def main():
+    """Синхронная обертка для обратной совместимости"""
+    asyncio.run(main_async())
 
 if __name__ == '__main__':
     main()
